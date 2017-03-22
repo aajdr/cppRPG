@@ -45,6 +45,22 @@ int main()
 
   map[3][3] = true;
   map[4][6] = true;
+  map[9][14] = true;
+  
+  for(int i=3; i<14; i++)
+  {
+  	if(i % 3 != 0)
+  	{
+  		map[i][3] = true;
+  	}
+  	
+  	map[0][i] = true;
+  }
+  
+  for(int i=1; i<21; i++)
+  {
+  	map[0][i] = true;
+  }
 
   for(int i=0; i<map.size(); i++)
   {
