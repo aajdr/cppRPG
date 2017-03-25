@@ -54,12 +54,12 @@ int main()
   		map[i][3] = true;
   	}
   	
-  	map[0][i] = true;
+  	map[2][i] = true;
   }
   
   for(int i=1; i<21; i++)
   {
-  	map[0][i] = true;
+  	map[1][i] = true;
   }
 
   for(int i=0; i<map.size(); i++)
