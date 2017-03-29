@@ -1,6 +1,8 @@
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include <iostream>
 #include <vector>
+#include <math.h>
 
 #define WIDE 800
 #define HIGH 640
@@ -44,22 +46,18 @@ int main()
   }
 
   map[3][3] = true;
-  map[4][6] = true;
-  map[9][14] = true;
-  
-  for(int i=3; i<14; i++)
+  map[1][3] = true;
+  map[3][5] = true;
+
+  for(int i=0; i<tileH; i++)
   {
-  	if(i % 3 != 0)
-  	{
-  		map[i][3] = true;
-  	}
-  	
-  	map[2][i] = true;
+    map[i][0] = true;
+    map[i][tileW-1] = true;
   }
-  
-  for(int i=1; i<21; i++)
+  for(int i=0; i<tileW; i++)
   {
-  	map[1][i] = true;
+    map[0][i] = true;
+    map[tileH-1][i] = true;
   }
 
   for(int i=0; i<map.size(); i++)
@@ -86,6 +84,17 @@ int main()
   sf::Sprite crab;
   crab.setTexture(crab_texture);
   crab.setScale(sf::Vector2f(2,2));
+  crab.setPosition(TILESIZE*6,TILESIZE);
+
+  sf::Texture seaweed_texture;
+  if(!seaweed_texture.loadFromFile("Assets/seaweedEnemy.png"))
+  {
+    std::cout << "Error loading seaweed texture!" << std::endl;
+  }
+  sf::Sprite seaweed;
+  seaweed.setTexture(seaweed_texture);
+  seaweed.setScale(sf::Vector2f(2,2));
+  seaweed.setPosition(TILESIZE*7,TILESIZE*3);
 
   sf::Font font;
   if(!font.loadFromFile("Assets/ARCADECLASSIC.TTF"))
@@ -106,6 +115,7 @@ int main()
   sf::Sprite hero;
   hero.setTexture(hero_texture);
   hero.setScale(sf::Vector2f(2,2));
+  hero.setPosition(TILESIZE,TILESIZE);
 
   sf::Texture wall_texture;
   if(!wall_texture.loadFromFile("Assets/object.png"))
@@ -139,12 +149,38 @@ int main()
   ground.setTexture(ground_texture);
   ground.setScale(sf::Vector2f(2,2));
 
-  int circleDirection = 0;
+  sf::SoundBuffer grunt_buffer;
+  if(!grunt_buffer.loadFromFile("Assets/grunt.wav"))
+  {
+    std::cout << "Error loading grunt sound!" << std::endl;
+  }
 
-  double heroSpeed = 1;
+  sf::Sound grunt;
+  grunt.setBuffer(grunt_buffer);
+  grunt.setPitch(1.4);
+
+  sf::SoundBuffer (music_buffer);
+  if(!music_buffer.loadFromFile("Assets/Lolita Compiex.wav"))
+   {
+     std::cout << "Error loading music!" << std::endl;
+   }
+
+   sf::Sound music;
+   music.setBuffer(music_buffer);
+   music.setLoop(true);
+
+  int enemyDirection = 0;
+
+  double heroSpeed = 0.75;
+
+  double homingX = 0.5;
+  double homingY = 0.5;
+  double homingDist = 0;
 
   int lives = 10;
   bool takingDamage = false;
+
+  music.play();
 
   //Game Loop
   while(window.isOpen())
@@ -198,6 +234,7 @@ int main()
       if(takingDamage == false)
       {
         lives --;
+        grunt.play();
         takingDamage = true;
       }
     }
@@ -206,12 +243,14 @@ int main()
       takingDamage = false;
     }
 
+    //Put seaweed damadge here
+
     livesDisp.setString(std::to_string(lives));
 
     window.clear(sf::Color::Black);
 
     //update stuff - This is me
-    if(circleDirection == 0)
+    if(enemyDirection == 0)
     {
       crab.move(0.5,0);
     }
@@ -221,12 +260,29 @@ int main()
     }
     if(crab.getPosition().x > 760)
     {
-      circleDirection = 1;
+      enemyDirection = 1;
     }
     if(crab.getPosition().x < 0)
     {
-      circleDirection = 0;
+      enemyDirection = 0;
     }
+    if(testWallColl(crab, wallArr))
+    {
+      if(enemyDirection == 0)
+      {
+        enemyDirection = 1;
+      }
+      else
+      {
+        enemyDirection = 0;
+      }
+    }
+
+    homingDist = sqrt(pow(hero.getPosition().x - seaweed.getPosition().x, 2) +
+            pow(hero.getPosition().y - seaweed.getPosition().y, 2));
+      homingX = (hero.getPosition().x - seaweed.getPosition().x)/homingDist;
+      homingY = (hero.getPosition().y - seaweed.getPosition().y)/homingDist;
+      seaweed.move(homingX/3, homingY/3);
 
     //render - This is Max
     for(int i=0; i<tileH ; i++)
@@ -243,6 +299,7 @@ int main()
     {
       window.draw(wallArr[i]);
     }
+    window.draw(seaweed);
     window.draw(hero);
     window.draw(livesDisp);
     window.display();
